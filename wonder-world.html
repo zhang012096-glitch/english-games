@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wonder World 尋寶挑戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE  occasion: a classroom game for 8-9 year olds, premium navy and gold as the teacher asked
+   IDEA   a treasure hunt: every right answer earns a gold coin on the treasure trail
+   PICTURE the question card itself, large and centred, with its picture drawn big
+   COLOUR navy ground, white cards, gold for coins and wins, royal blue for actions
+   TYPE   Fredoka for English words, Noto Sans TC for Chinese
+   LAYOUT top bar (title, team scores), coin trail, big question card, 2x2 answers; phone stacks answers 2x2 smaller */
+:root{color-scheme:dark;--navy:#0E2341;--navy2:#16325C;--royal:#1F4E8C;--sky:#3C78C3;--gold:#C9A227;--gold2:#E6CB80;--goldd:#9C7414;--ivory:#FFFFFF;--ink:#1B2433;--mute:#5A6272;--ok:#2E8B57;--bad:#C0392B}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--navy);background-image:radial-gradient(circle at 15% 10%,#1d3d6e 0,transparent 40%),radial-gradient(circle at 90% 90%,#1a3762 0,transparent 45%);color:#fff;font:16px/1.5 "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;overflow-x:clip}
+.en{font-family:Fredoka,"Noto Sans TC",system-ui,sans-serif}
+.app{max-width:1100px;margin:0 auto;padding:14px max(16px,3vw) 24px;min-height:100%;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:clamp(22px,3.2vw,32px);line-height:1.05;letter-spacing:-.01em;font-weight:900;flex:1 1 auto}
+header h1 b{color:var(--gold2);font-weight:900}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 14px;background:var(--navy2);border:1px solid #2b4b7c;font-weight:700;white-space:nowrap}
+.pill .n{font-family:Fredoka;font-size:22px;line-height:1}
+.team-b{border-color:var(--sky)}.team-g{border-color:var(--gold)}
+.team-on{box-shadow:0 0 0 3px var(--gold2)}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible{outline:3px solid var(--gold2);outline-offset:3px}
+.btn{min-height:48px;padding:10px 22px;border-radius:14px;background:var(--gold);color:var(--navy);font-weight:900;font-size:18px;box-shadow:0 4px 0 var(--goldd)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--goldd)}
+.btn.alt{background:var(--royal);color:#fff;box-shadow:0 4px 0 #12345f}
+.ghost{background:transparent;border:1px solid #3a5a8a;border-radius:12px;min-height:44px;padding:8px 14px;color:#dfe7f3;font-weight:700}
+/* start */
+.intro{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
+.panel{background:var(--navy2);border:1px solid #2b4b7c;border-radius:20px;padding:18px}
+.panel h2{margin:0 0 4px;font-size:20px;color:var(--gold2)}
+.panel p{margin:0 0 12px;color:#c9d5e8;font-size:15px}
+.islands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.isl{background:#fff;color:var(--ink);border-radius:16px;padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:118px;border:3px solid transparent;transition:transform .15s}
+.isl:hover{transform:translateY(-3px)}
+.isl[aria-pressed=true]{border-color:var(--gold);background:#fff8e4}
+.isl .ic{font-size:40px;line-height:1.15}
+.isl .nm{font-family:Fredoka;font-weight:700;font-size:17px;color:var(--navy)}
+.isl .zh{font-size:13px;color:var(--mute);font-weight:700}
+.opts{display:flex;flex-direction:column;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{min-height:52px;border-radius:12px;background:#0f2a50;border:2px solid #2b4b7c;font-weight:900;color:#dfe7f3}
+.seg button[aria-pressed=true]{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.chk{display:flex;align-items:center;gap:10px;font-weight:700;color:#dfe7f3;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:var(--gold)}
+.howto{margin:4px 0 0;padding-left:20px;color:#c9d5e8;font-size:14px}
+.howto li{margin-bottom:4px}
+/* trail */
+.trail{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:Fredoka;font-weight:700;font-size:15px;background:#0f2a50;border:2px dashed #3a5a8a;color:#8ea3c4}
+.coin.ok{background:radial-gradient(circle at 35% 30%,#f6e3a6,var(--gold) 60%,var(--goldd));border:2px solid #f2d98a;color:var(--navy)}
+.coin.no{background:#2a3550;border:2px solid #4a5878;color:#a9b4c9}
+.coin.now{border:3px solid var(--gold2);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+/* card */
+.stage{flex:1;display:flex;flex-direction:column;gap:14px}
+.card{position:relative;background:#fff;color:var(--ink);border-radius:24px;padding:clamp(16px,3vw,28px);text-align:center;box-shadow:0 8px 0 #0a1a31;min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.tag{position:absolute;left:16px;top:14px;font-size:14px;font-weight:900;color:var(--royal);background:#eaf0f8;border-radius:999px;padding:4px 12px}
+.turn{position:absolute;right:16px;top:14px;font-size:14px;font-weight:900;border-radius:999px;padding:4px 12px;color:#fff}
+.ask{font-size:clamp(18px,2.6vw,24px);font-weight:900;color:var(--navy);margin-top:18px}
+.big{font-size:clamp(72px,12vw,120px);line-height:1.1}
+.count{font-size:clamp(34px,6vw,54px);line-height:1.2;max-width:560px;word-break:break-all}
+.swatch{width:clamp(110px,16vw,150px);aspect-ratio:1;border-radius:50%;border:5px solid var(--navy)}
+.letter{font-family:Fredoka;font-weight:700;font-size:clamp(80px,13vw,128px);line-height:1;color:var(--navy)}
+.letter small{display:block;font-size:26px;color:var(--goldd);margin-top:6px}
+.sent{font-family:Fredoka;font-size:clamp(24px,4vw,38px);font-weight:600;color:var(--ink);line-height:1.3}
+.sent .blank{display:inline-block;min-width:3.2em;border-bottom:4px solid var(--gold);margin:0 .15em;color:var(--royal)}
+.hint{font-size:15px;color:var(--mute);font-weight:700}
+.speak{width:96px;height:96px;border-radius:50%;background:var(--royal);font-size:46px;box-shadow:0 6px 0 #12345f}
+.speak.sm{width:52px;height:52px;font-size:24px;box-shadow:0 4px 0 #12345f}
+.dlg{font-family:Fredoka;font-size:clamp(24px,3.6vw,34px);font-weight:600;color:var(--navy);display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ans{position:relative;min-height:86px;border-radius:18px;background:#fff;color:var(--ink);font-family:Fredoka;font-weight:600;font-size:clamp(20px,2.8vw,28px);padding:10px 14px 10px 52px;box-shadow:0 5px 0 #0a1a31;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;border:3px solid transparent}
+.ans .k{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--gold2);font-size:16px;display:grid;place-items:center}
+.ans .em{font-size:clamp(46px,7vw,64px);line-height:1}
+.ans .sw{width:56px;height:56px;border-radius:50%;border:3px solid var(--navy)}
+.ans:hover:not([disabled]){border-color:var(--gold2)}
+.ans.right{background:#e3f4ea;border-color:var(--ok)}
+.ans.wrong{background:#f9e3e0;border-color:var(--bad);animation:shake .35s}
+.ans[disabled]{cursor:default}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.feedback{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--navy2);border:1px solid #2b4b7c;border-radius:16px;padding:10px 14px}
+.feedback .msg{font-weight:900;font-size:18px}
+.feedback .msg .en{color:var(--gold2);font-size:20px}
+.feedback .sub{font-size:14px;color:#c9d5e8;font-weight:500}
+/* end */
+.end{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.trophy{background:#fff;color:var(--ink);border-radius:24px;padding:24px;text-align:center;box-shadow:0 8px 0 #0a1a31}
+.trophy .t{font-size:90px;line-height:1.1}
+.trophy h2{margin:6px 0 2px;font-family:Fredoka;font-size:40px;color:var(--navy);line-height:1.05}
+.stars{font-size:44px;letter-spacing:6px;color:var(--gold)}
+.stars .off{color:#d9dee8}
+.score{font-size:18px;font-weight:900;color:var(--mute)}
+.review{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+.review li{display:flex;align-items:center;gap:12px;background:#0f2a50;border-radius:14px;padding:8px 12px}
+.review .e{font-size:34px;width:44px;text-align:center}
+.review .w{font-family:Fredoka;font-size:20px;font-weight:600;color:var(--gold2)}
+.review .s{font-size:14px;color:#c9d5e8}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.hide{display:none!important}
+@media (max-width:760px){.intro,.end{grid-template-columns:minmax(0,1fr)}.islands{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:520px){.islands{grid-template-columns:repeat(2,minmax(0,1fr))}.ans{min-height:72px;padding-left:46px}.coin{width:26px;height:26px;font-size:12px}.card{min-height:220px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="app">
+  <header>
+    <h1>Wonder World <b>尋寶挑戰</b></h1>
+    <span id="scoreSolo" class="pill hide">⭐ <span class="n" id="soloN">0</span> / <span id="soloT">10</span></span>
+    <span id="scoreB" class="pill team-b hide">🔵 藍隊 <span class="n" id="bN">0</span></span>
+    <span id="scoreG" class="pill team-g hide">🟡 金隊 <span class="n" id="gN">0</span></span>
+    <button class="ghost hide" id="quit" type="button">回地圖</button>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="intro">
+    <div class="panel">
+      <h2>1．選一座寶藏島</h2>
+      <p>每一題答對就拿到一枚金幣，10 題收集越多越厲害！</p>
+      <div class="islands" id="islands"></div>
+    </div>
+    <div class="panel opts">
+      <h2>2．怎麼玩？</h2>
+      <div class="seg" role="group" aria-label="遊戲模式">
+        <button type="button" id="mSolo" aria-pressed="true">一個人玩</button>
+        <button type="button" id="mTeam" aria-pressed="false">藍隊 vs 金隊</button>
+      </div>
+      <div class="seg" role="group" aria-label="題數">
+        <button type="button" id="n10" aria-pressed="true">10 題</button>
+        <button type="button" id="n20" aria-pressed="false">20 題</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="voice" checked> 唸出英文（🔊 發音）</label>
+      <ol class="howto">
+        <li>聽一聽、看一看，選出正確答案。</li>
+        <li>也可以按鍵盤 1～4 作答，按 Enter 下一題。</li>
+        <li>兩隊模式會輪流作答，答對的隊伍加 1 分。</li>
+      </ol>
+      <button class="btn" id="go" type="button">出發尋寶！</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" class="stage hide">
+    <div class="trail" id="trail" aria-label="金幣進度"></div>
+    <div class="card" id="card"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="fb">
+      <div><div class="msg" id="msg">選出你的答案吧！</div><div class="sub" id="sub">按 🔊 可以再聽一次</div></div>
+      <button class="btn alt hide" id="next" type="button">下一題 →</button>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="end hide">
+    <div class="trophy">
+      <div class="t" id="tIcon">🏆</div>
+      <h2 id="tTitle">寶藏到手！</h2>
+      <div class="stars" id="stars"></div>
+      <div class="score" id="tScore"></div>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <button class="btn" id="again" type="button">再玩一次</button>
+        <button class="btn alt" id="home" type="button">換一座島</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>再練習一下這些字</h2>
+      <p id="revNote">按 🔊 聽單字和影片裡的例句。</p>
+      <ul class="review" id="review"></ul>
+    </div>
+  </section>
+</div>
+
+<script>
+{
+const UNITS=[{"id":"gr","name":"Get Ready","zh":"數字 1–5","icon":"🚀","items":[{"w":"one","zh":"一","e":"🐱","s":"I have one cat.","hl":"one","szh":"我有一隻貓。","kind":"num","n":1},{"w":"two","zh":"二","e":"🐶","s":"I have two dogs.","hl":"two","szh":"我有兩隻狗。","kind":"num","n":2},{"w":"three","zh":"三","e":"📚","s":"I have three books.","hl":"three","szh":"我有三本書。","kind":"num","n":3},{"w":"four","zh":"四","e":"🍎","s":"I have four apples.","hl":"four","szh":"我有四個蘋果。","kind":"num","n":4},{"w":"five","zh":"五","e":"🖍️","s":"I have five crayons.","hl":"five","szh":"我有五支蠟筆。","kind":"num","n":5}]},{"id":"u1","name":"Unit 1","zh":"生日派對","icon":"🎂","items":[{"w":"six","zh":"六","e":"🥚","s":"I have six eggs.","hl":"six","szh":"我有六個蛋。","kind":"num","n":6},{"w":"seven","zh":"七","e":"🐟","s":"I have seven fish.","hl":"seven","szh":"我有七條魚。","kind":"num","n":7},{"w":"eight","zh":"八","e":"🐦","s":"I have eight birds.","hl":"eight","szh":"我有八隻鳥。","kind":"num","n":8},{"w":"nine","zh":"九","e":"✏️","s":"I have nine pencils.","hl":"nine","szh":"我有九支鉛筆。","kind":"num","n":9},{"w":"ten","zh":"十","e":"🍊","s":"I have ten oranges.","hl":"ten","szh":"我有十個柳橙。","kind":"num","n":10},{"w":"how old","zh":"幾歲","e":"🎂","s":"How old are you?","hl":"How old","szh":"你幾歲？","kind":"word"},{"w":"are","zh":"是","e":"🧑‍🤝‍🧑","s":"They are my friends.","hl":"are","szh":"他們是我的朋友。","kind":"word"},{"w":"you","zh":"你","e":"🫵","s":"You are my friend.","hl":"You","szh":"你是我的朋友。","kind":"word"},{"w":"I","zh":"我","e":"🙋","s":"I like to read books.","hl":"I","szh":"我喜歡閱讀。","kind":"word"},{"w":"am","zh":"是","e":"👦","s":"I am a boy.","hl":"am","szh":"我是一個男孩。","kind":"word"},{"w":"years old","zh":"歲","e":"🎈","s":"I am six years old.","hl":"years old","szh":"我六歲。","kind":"word"}]},{"id":"u2","name":"Unit 2","zh":"心情","icon":"😄","items":[{"w":"angry","zh":"生氣的","e":"😠","s":"The teacher looks angry today.","hl":"angry","szh":"老師今天看起來很生氣。","kind":"pic"},{"w":"happy","zh":"快樂的","e":"😄","s":"I am happy to see you.","hl":"happy","szh":"見到你我很開心。","kind":"pic"},{"w":"sad","zh":"難過的","e":"😢","s":"She looks sad today.","hl":"sad","szh":"她今天看起來很傷心。","kind":"pic"},{"w":"hungry","zh":"飢餓的","e":"🤤","s":"I am hungry in the morning.","hl":"hungry","szh":"我早上肚子餓。","kind":"pic"},{"w":"thirsty","zh":"口渴的","e":"🥤","s":"I am thirsty after sports.","hl":"thirsty","szh":"運動後我很口渴。","kind":"pic"},{"w":"yes","zh":"是的","e":"👍","s":"Yes, I like apples.","hl":"Yes","szh":"是的，我喜歡蘋果。","kind":"word"},{"w":"no","zh":"不；不是","e":"🙅","s":"No, I am not hungry.","hl":"No","szh":"不，我不餓。","kind":"word"},{"w":"not","zh":"不是","e":"🚫","s":"I am not tired today.","hl":"not","szh":"我今天不累。","kind":"word"}]},{"id":"u3","name":"Unit 3","zh":"玩具","icon":"🤖","items":[{"w":"robot","zh":"機器人","e":"🤖","s":"I have a robot.","hl":"robot","szh":"我有一個機器人。","kind":"pic"},{"w":"yo-yo","zh":"溜溜球","e":"🪀","s":"I play with a yo-yo.","hl":"yo-yo","szh":"我玩溜溜球。","kind":"pic"},{"w":"ball","zh":"皮球","e":"⚽","s":"I have a ball.","hl":"ball","szh":"我有一顆球。","kind":"pic"},{"w":"car","zh":"車","e":"🚗","s":"I see a car.","hl":"car","szh":"我看到一台車。","kind":"pic"},{"w":"doll","zh":"洋娃娃","e":"🪆","s":"I have a doll.","hl":"doll","szh":"我有一個洋娃娃。","kind":"pic"},{"w":"kite","zh":"風箏","e":"🪁","s":"I fly a kite in the park.","hl":"kite","szh":"我在公園放風箏。","kind":"pic"},{"w":"what","zh":"什麼","e":"❓","s":"What is this?","hl":"What","szh":"這是什麼？","kind":"word"},{"w":"this","zh":"這個","e":"📚","s":"This is my book.","hl":"This","szh":"這是我的書。","kind":"word"},{"w":"that","zh":"那個","e":"🐕","s":"That is a big dog.","hl":"That","szh":"那是一隻大狗。","kind":"word"},{"w":"it","zh":"它；牠","e":"🐱","s":"It is a small cat.","hl":"It","szh":"牠是一隻小貓。","kind":"word"},{"w":"is","zh":"是","e":"🐈","s":"This is a cat.","hl":"is","szh":"這是一隻貓。","kind":"word"},{"w":"a","zh":"一個","e":"🖊️","s":"I have a pen.","hl":"a","szh":"我有一支筆。","kind":"word"}]},{"id":"u4","name":"Unit 4","zh":"顏色","icon":"🎨","items":[{"w":"color","zh":"顏色","e":"🎨","s":"What is your favorite color?","hl":"color","szh":"你最喜歡什麼顏色？","kind":"word"},{"w":"blue","zh":"藍色","e":"🌤️","s":"The sky is blue today.","hl":"blue","szh":"今天天空是藍色的。","kind":"color","hex":"1F6FD1"},{"w":"green","zh":"綠色","e":"🌿","s":"The grass is green.","hl":"green","szh":"草地是綠色的。","kind":"color","hex":"3FA34D"},{"w":"pink","zh":"粉紅色","e":"👗","s":"She likes the pink dress.","hl":"pink","szh":"她喜歡那件粉紅色的洋裝。","kind":"color","hex":"F7A1C4"},{"w":"purple","zh":"紫色","e":"👜","s":"I have a purple bag.","hl":"purple","szh":"我有一個紫色的包包。","kind":"color","hex":"7B4BC4"},{"w":"red","zh":"紅色","e":"🍎","s":"The apple is red and sweet.","hl":"red","szh":"這個蘋果是紅色的，而且很甜。","kind":"color","hex":"E63B2E"},{"w":"yellow","zh":"黃色","e":"🍌","s":"The banana is yellow.","hl":"yellow","szh":"香蕉是黃色的。","kind":"color","hex":"FFC20E"}]},{"id":"xm","name":"Christmas","zh":"耶誕節","icon":"🎄","items":[{"w":"Christmas tree","zh":"耶誕樹","e":"🎄","s":"I see a Christmas tree.","hl":"Christmas tree","szh":"我看到一棵耶誕樹。","kind":"pic"},{"w":"Santa Claus","zh":"耶誕老人","e":"🎅","s":"Santa Claus gives gifts to children.","hl":"Santa Claus","szh":"耶誕老人送禮物給孩子們。","kind":"pic"},{"w":"snowman","zh":"雪人","e":"⛄","s":"I see a snowman.","hl":"snowman","szh":"我看到一個雪人。","kind":"pic"},{"w":"star","zh":"星星","e":"⭐","s":"I can see a star at night.","hl":"star","szh":"我晚上可以看到星星。","kind":"pic"},{"w":"stocking","zh":"長筒襪","e":"🧦","s":"I have a stocking.","hl":"stocking","szh":"我有一隻長筒襪。","kind":"pic"}]}];
+const PH=[{"L":"Aa","snd":"/æ/","words":[{"w":"ant","zh":"螞蟻","e":"🐜","s":"I see an ant on the floor.","szh":"我看到地板上有一隻螞蟻。"},{"w":"apple","zh":"蘋果","e":"🍎","s":"I eat an apple every day.","szh":"我每天吃一個蘋果。"}]},{"L":"Bb","snd":"/b/","words":[{"w":"bed","zh":"床","e":"🛏️","s":"I sleep in my bed.","szh":"我睡在我的床上。"},{"w":"bag","zh":"袋子","e":"👜","s":"I put my books in my bag.","szh":"我把書放進包包裡。"}]},{"L":"Cc","snd":"/k/","words":[{"w":"cat","zh":"貓","e":"🐱","s":"My cat is black and white.","szh":"我的貓是黑白色的。"},{"w":"cab","zh":"計程車","e":"🚕","s":"I see a cab.","szh":"我看到一台計程車。"}]},{"L":"Dd","snd":"/d/","words":[{"w":"duck","zh":"鴨子","e":"🦆","s":"The duck swims in the pond.","szh":"鴨子在池塘裡游泳。"},{"w":"dad","zh":"爸爸","e":"👨","s":"My dad is very kind.","szh":"我的爸爸非常親切。"}]},{"L":"Ee","snd":"/ɛ/","words":[{"w":"egg","zh":"蛋","e":"🥚","s":"I eat an egg for breakfast.","szh":"我早餐吃一個蛋。"},{"w":"elephant","zh":"大象","e":"🐘","s":"The elephant is the biggest land animal.","szh":"大象是最大的陸地動物。"}]},{"L":"Ff","snd":"/f/","words":[{"w":"fish","zh":"魚","e":"🐟","s":"I have a fish in a bowl.","szh":"我有一條金魚在魚缸裡。"},{"w":"fan","zh":"風扇","e":"🪭","s":"Mom turns on the fan in summer.","szh":"媽媽在夏天打開電風扇。"}]},{"L":"Gg","snd":"/g/","words":[{"w":"goat","zh":"山羊","e":"🐐","s":"I see a goat on the farm.","szh":"我在農場看到一隻山羊。"},{"w":"gap","zh":"縫隙","e":"🕳️","s":"There is a gap in the fence.","szh":"柵欄上有一個裂縫。"}]},{"L":"Hh","snd":"/h/","words":[{"w":"hat","zh":"帽子","e":"👒","s":"I wear a hat in the sun.","szh":"我在陽光下戴帽子。"},{"w":"ham","zh":"火腿","e":"🍖","s":"I eat ham for lunch.","szh":"我午餐吃火腿。"}]},{"L":"Ii","snd":"/ɪ/","words":[{"w":"ink","zh":"墨水","e":"🖋️","s":"The pen runs out of ink.","szh":"筆的墨水用完了。"},{"w":"igloo","zh":"冰屋","e":"🧊","s":"I see an igloo.","szh":"我看到一個冰屋。"}]},{"L":"Jj","snd":"/dʒ/","words":[{"w":"jam","zh":"果醬","e":"🍓","s":"I put jam on my bread.","szh":"我把果醬塗在麵包上。"},{"w":"jet","zh":"噴射機","e":"✈️","s":"The jet flies very fast.","szh":"噴射機飛得很快。"}]},{"L":"Kk","snd":"/k/","words":[{"w":"key","zh":"鑰匙","e":"🔑","s":"I lost my key.","szh":"我的鑰匙不見了。"},{"w":"kid","zh":"小孩","e":"🧒","s":"I am a kid.","szh":"我是一個小孩。"}]},{"L":"Ll","snd":"/l/","words":[{"w":"lion","zh":"獅子","e":"🦁","s":"The lion is the king of animals.","szh":"獅子是動物之王。"},{"w":"leg","zh":"腿","e":"🦵","s":"My leg hurts after running.","szh":"跑步後我的腿很痛。"}]},{"L":"Mm","snd":"/m/","words":[{"w":"monkey","zh":"猴子","e":"🐵","s":"The monkey likes to climb trees.","szh":"猴子喜歡爬樹。"},{"w":"mop","zh":"拖把","e":"🧹","s":"I mop the floor every week.","szh":"我每週拖地板。"}]},{"L":"Nn","snd":"/n/","words":[{"w":"nod","zh":"點頭","e":"😊","s":"I nod my head.","szh":"我點點頭。"},{"w":"net","zh":"網子","e":"🥅","s":"I have a net.","szh":"我有一個網子。"}]},{"L":"Oo","snd":"/ɑ/","words":[{"w":"octopus","zh":"章魚","e":"🐙","s":"I see an octopus.","szh":"我看到一隻章魚。"},{"w":"ox","zh":"公牛","e":"🐂","s":"The ox works on the farm.","szh":"公牛在農場工作。"}]},{"L":"Pp","snd":"/p/","words":[{"w":"pig","zh":"豬","e":"🐷","s":"The pig is fat and pink.","szh":"這隻豬又胖又粉紅。"},{"w":"pan","zh":"平底鍋","e":"🍳","s":"I have a pan.","szh":"我有一個平底鍋。"}]},{"L":"Qq","snd":"/kw/","words":[{"w":"queen","zh":"皇后","e":"👸","s":"The queen wears a crown.","szh":"皇后戴著皇冠。"},{"w":"quiz","zh":"小考","e":"📝","s":"We have a quiz today.","szh":"我們今天有小測驗。"}]},{"L":"Rr","snd":"/r/","words":[{"w":"rabbit","zh":"兔子","e":"🐰","s":"My rabbit is white and soft.","szh":"我的兔子白白軟軟的。"},{"w":"red","zh":"紅色","e":"🔴","s":"The apple is red and sweet.","szh":"這個蘋果是紅色的，而且很甜。"}]},{"L":"Ss","snd":"/s/","words":[{"w":"seven","zh":"七","e":"7️⃣","s":"I have seven fish.","szh":"我有七條魚。"},{"w":"sun","zh":"太陽","e":"☀️","s":"The sun is very bright today.","szh":"今天太陽非常耀眼。"}]},{"L":"Tt","snd":"/t/","words":[{"w":"top","zh":"陀螺","e":"🌀","s":"I like to spin a top.","szh":"我喜歡轉陀螺。"},{"w":"ten","zh":"十","e":"🔟","s":"I have ten oranges.","szh":"我有十個柳橙。"}]},{"L":"Uu","snd":"/ʌ/","words":[{"w":"umbrella","zh":"雨傘","e":"☂️","s":"I take an umbrella when it rains.","szh":"下雨時我帶雨傘。"},{"w":"up","zh":"向上","e":"⬆️","s":"Look up at the sky.","szh":"抬頭看天空。"}]},{"L":"Vv","snd":"/v/","words":[{"w":"vest","zh":"背心","e":"🦺","s":"He wears a vest over his shirt.","szh":"他在襯衫外穿背心。"},{"w":"van","zh":"廂型車","e":"🚐","s":"Dad drives a van.","szh":"爸爸開廂型車。"}]},{"L":"Ww","snd":"/w/","words":[{"w":"watch","zh":"手錶","e":"⌚","s":"I got a new watch for my birthday.","szh":"我生日收到一只新手錶。"},{"w":"wig","zh":"假髮","e":"💇‍♀️","s":"She has a wig.","szh":"她有一頂假髮。"}]},{"L":"Xx","snd":"/ks/","words":[{"w":"six","zh":"六","e":"6️⃣","s":"I have six eggs.","szh":"我有六個蛋。"},{"w":"fox","zh":"狐狸","e":"🦊","s":"The fox is clever and fast.","szh":"狐狸聰明又快速。"}]},{"L":"Yy","snd":"/j/","words":[{"w":"yo-yo","zh":"溜溜球","e":"🪀","s":"I play with a yo-yo.","szh":"我玩溜溜球。"},{"w":"yellow","zh":"黃色","e":"🟡","s":"The banana is yellow.","szh":"香蕉是黃色的。"}]},{"L":"Zz","snd":"/z/","words":[{"w":"zoo","zh":"動物園","e":"🦒","s":"I like to visit the zoo.","szh":"我喜歡參觀動物園。"},{"w":"zip","zh":"拉拉鍊","e":"🤐","s":"Please zip up your jacket.","szh":"請拉上你夾克的拉鍊。"}]}];
+
+const $ = (id) => document.getElementById(id);
+const rnd = (n) => Math.floor(Math.random() * n);
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ALL = UNITS.flatMap((u) => u.items.map((x) => Object.assign({ unit: u.id }, x)));
+const PHW = PH.flatMap((p) => p.words.map((w) => Object.assign({ L: p.L, snd: p.snd }, w)));
+const ISL = UNITS.map((u) => ({ id: u.id, name: u.name, zh: u.zh, icon: u.icon })).concat([{ id: "abc", name: "ABC", zh: "字母拼讀", icon: "🔤" }, { id: "all", name: "大挑戰", zh: "全部混合", icon: "🏆" }]);
+const DLG = [
+  { u: "u1", q: "How old are you?", pic: "🎂 9", a: "I'm nine.", w: ["I'm fine.", "It's nine.", "Yes, I am."], zh: "你幾歲？我九歲。" },
+  { u: "u1", q: "How old are you?", pic: "🎂 8", a: "I'm eight years old.", w: ["I'm eight year old.", "I am eights.", "It's eight."], zh: "你幾歲？我八歲。" },
+  { u: "u2", q: "Are you hungry?", pic: "🤤 👍", a: "Yes, I am.", w: ["Yes, I'm.", "No, I am.", "It's hungry."], zh: "你餓嗎？是的，我餓。" },
+  { u: "u2", q: "Are you thirsty?", pic: "🥤 🙅", a: "No, I'm not.", w: ["No, I am.", "Yes, I not.", "No, it's not."], zh: "你渴嗎？不，我不渴。" },
+  { u: "u2", q: "Are you happy?", pic: "😄 👍", a: "Yes, I am.", w: ["Yes, you are.", "No, I'm not.", "I'm sad."], zh: "你開心嗎？是的，我開心。" },
+  { u: "u3", q: "What's this?", pic: "👇 🪁", a: "It's a kite.", w: ["It's kite.", "This is.", "I'm a kite."], zh: "這是什麼？是風箏。" },
+  { u: "u3", q: "What's that?", pic: "👉 🤖", a: "It's a robot.", w: ["That's robot.", "It a robot.", "I'm a robot."], zh: "那是什麼？是機器人。" },
+  { u: "u4", q: "What color is it?", pic: "🍌", a: "It's yellow.", w: ["It's red.", "It's blue.", "It's a yellow."], zh: "它是什麼顏色？黃色。" },
+  { u: "u4", q: "What color is it?", pic: "🍎", a: "It's red.", w: ["It's green.", "It's pink.", "Is red."], zh: "它是什麼顏色？紅色。" },
+  { u: "gr", q: "How many?", pic: "🐶 🐶", a: "I have two dogs.", w: ["I have two dog.", "I have three dogs.", "I has two dogs."], zh: "我有兩隻狗。" },
+];
+const S = { unit: "all", mode: "solo", total: 10, voice: true, qs: [], qi: 0, score: 0, team: [0, 0], wrong: [], answered: false };
+
+// ---------- sound ----------
+let AC = null;
+function tone(freqs, dur = 0.12) {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  freqs.forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = "triangle"; o.frequency.value = f; const t = AC.currentTime + i * dur; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 1.6); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur * 1.8); });
+}
+let VOICE = null;
+function pickVoice() { try { const v = speechSynthesis.getVoices(); VOICE = v.find((x) => /en-US/i.test(x.lang) && /Samantha|Google US|Aria|Jenny|Zira/i.test(x.name)) || v.find((x) => /en-US/i.test(x.lang)) || v.find((x) => /^en/i.test(x.lang)) || null; } catch (e) {} }
+try { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {}
+function say(text, rate = 0.82) {
+  if (!S.voice || !text) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = "en-US"; u.rate = rate; if (VOICE) u.voice = VOICE; speechSynthesis.speak(u); } catch (e) {}
+}
+
+// ---------- question builders ----------
+const pool = (unit) => unit === "all" ? ALL : unit === "abc" ? [] : ALL.filter((x) => x.unit === unit);
+function others(arr, n, keyFn, notKey) { const seen = new Set([notKey]); const out = []; for (const x of shuffle(arr)) { const k = keyFn(x); if (!seen.has(k)) { seen.add(k); out.push(x); } if (out.length >= n) break; } return out; }
+const picOf = (x) => x.kind === "color" ? `<span class="sw" style="background:#${x.hex}"></span>` : x.kind === "num" ? `<span class="en" style="font-size:46px;color:var(--navy)">${x.n}</span>` : `<span class="em">${x.e}</span>`;
+const bigPic = (x) => x.kind === "color" ? `<div class="swatch" style="background:#${x.hex}"></div>` : x.kind === "num" ? `<div class="count">${x.e.repeat(x.n)}</div>` : `<div class="big">${x.e}</div>`;
+const concrete = (x) => x.kind !== "word";
+
+function qListen(x, p) {
+  const opts = [x].concat(others(p.filter(concrete), 3, (y) => y.w, x.w));
+  return { tag: "聽一聽", ask: "聽英文，選出正確的圖！", show: `<button class="speak" type="button" data-say="${esc(x.w)}" aria-label="再聽一次">🔊</button>`, sayNow: x.w,
+    opts: shuffle(opts).map((y) => ({ v: y.w, h: picOf(y) })), ans: x.w, rev: x };
+}
+function qLook(x, p) {
+  const opts = [x].concat(others(p.filter(concrete), 3, (y) => y.w, x.w));
+  return { tag: "看一看", ask: x.kind === "num" ? "How many? 有幾個？" : x.kind === "color" ? "What color is it? 這是什麼顏色？" : "這是什麼？選出英文！", show: bigPic(x), opts: shuffle(opts).map((y) => ({ v: y.w, h: esc(y.w) })), ans: x.w, rev: x };
+}
+function qSentence(x, p) {
+  const cap = /^[A-Z]/.test(x.hl);
+  const fmt = (w) => cap ? w[0].toUpperCase() + w.slice(1) : (w === "I" ? w : w.toLowerCase());
+  const cands = others(p.filter((y) => y.hl.toLowerCase() !== x.hl.toLowerCase()), 6, (y) => y.hl.toLowerCase(), x.hl.toLowerCase()).map((y) => fmt(y.hl)).filter((w) => w !== x.hl).slice(0, 3);
+  const i = x.s.indexOf(x.hl);
+  const sent = esc(x.s.slice(0, i)) + `<span class="blank">&nbsp;</span>` + esc(x.s.slice(i + x.hl.length));
+  return { tag: "影片例句", ask: "這句話少了哪個字？", show: `<div class="big" style="font-size:64px">${x.e}</div><div class="sent">${sent}</div><div class="hint">${esc(x.szh)}</div>`, sayNow: null,
+    opts: shuffle([x.hl].concat(cands)).map((w) => ({ v: w, h: esc(w) })), ans: x.hl, rev: x, full: x.s };
+}
+function qDialog(d) {
+  return { tag: "對話", ask: "選出最好的回答！", show: `<div class="big" style="font-size:64px">${d.pic}</div><div class="dlg"><button class="speak sm" type="button" data-say="${esc(d.q)}" aria-label="聽問句">🔊</button>${esc(d.q)}</div><div class="hint">${esc(d.zh)}</div>`, sayNow: d.q,
+    opts: shuffle([d.a].concat(d.w)).map((w) => ({ v: w, h: esc(w) })), ans: d.a, rev: { w: d.a, e: d.pic.split(" ")[0], s: d.q + " " + d.a, szh: d.zh }, full: d.a };
+}
+function qLetterPic(p) {
+  const w = p.words[rnd(2)];
+  const opts = [w].concat(others(PHW.filter((y) => y.L !== p.L && y.w[0] !== w.w[0] && y.L !== "Xx"), 3, (y) => y.w, w.w));
+  return { tag: "字母拼讀", ask: `哪一個是 ${p.L} 開頭的字？`, show: `<div class="letter">${p.L}<small>${p.snd}</small></div>`, sayNow: null,
+    opts: shuffle(opts).map((y) => ({ v: y.w, h: `<span class="em">${y.e}</span>` })), ans: w.w, rev: Object.assign({ hl: w.w }, w), full: w.w };
+}
+function qLetterListen(w) {
+  const letters = [w.L].concat(others(PH.filter((p) => p.L !== w.L && p.L !== "Xx" && !(w.L === "Cc" && p.L === "Kk") && !(w.L === "Kk" && p.L === "Cc")), 3, (p) => p.L, w.L).map((p) => p.L));
+  return { tag: "聽音找字母", ask: "聽單字，它是哪個字母開頭？", show: `<button class="speak" type="button" data-say="${esc(w.w)}" aria-label="再聽一次">🔊</button><div class="big" style="font-size:64px">${w.e}</div>`, sayNow: w.w,
+    opts: shuffle(letters).map((L) => ({ v: L, h: `<span style="font-size:1.3em">${L}</span>` })), ans: w.L, rev: Object.assign({ hl: w.w }, w), full: w.w };
+}
+
+function build(unit, total) {
+  const out = [], P = pool(unit);
+  const phon = () => { const p = PH.filter((x) => x.L !== "Xx")[rnd(25)]; return Math.random() < 0.5 ? qLetterPic(p) : qLetterListen(p.words[rnd(2)]); };
+  const dl = DLG.filter((d) => unit === "all" || d.u === unit);
+  let tries = 0;
+  const used = new Set();
+  while (out.length < total && tries++ < 500) {
+    let q;
+    if (unit === "abc") q = phon();
+    else {
+      const r = Math.random();
+      if (unit === "all" && r < 0.18) q = phon();
+      else if (dl.length && r < 0.34) q = qDialog(dl[rnd(dl.length)]);
+      else {
+        const x = P[rnd(P.length)];
+        const t = Math.random();
+        q = !concrete(x) || t < 0.34 ? qSentence(x, P.length > 4 ? P : ALL) : t < 0.67 ? qListen(x, P.filter(concrete).length >= 4 ? P : ALL) : qLook(x, P.filter(concrete).length >= 4 ? P : ALL);
+      }
+    }
+    const key = q.tag + q.ans + q.ask;
+    if (used.has(key) && tries < 400) continue;
+    used.add(key); out.push(q);
+  }
+  return out;
+}
+
+// ---------- rendering ----------
+function renderIslands() {
+  $("islands").innerHTML = ISL.map((i) => `<button class="isl" type="button" data-u="${i.id}" aria-pressed="${S.unit === i.id}"><span class="ic">${i.icon}</span><span class="nm">${i.name}</span><span class="zh">${i.zh}</span></button>`).join("");
+}
+function show(id) { ["start", "play", "end"].forEach((s) => $(s).classList.toggle("hide", s !== id)); const playing = id !== "start"; $("quit").classList.toggle("hide", !playing); $("scoreSolo").classList.toggle("hide", !(playing && S.mode === "solo")); ["scoreB", "scoreG"].forEach((s) => $(s).classList.toggle("hide", !(playing && S.mode === "team"))); }
+function scores() { $("soloN").textContent = S.score; $("soloT").textContent = S.qs.length; $("bN").textContent = S.team[0]; $("gN").textContent = S.team[1]; const t = S.qi % 2; $("scoreB").classList.toggle("team-on", S.mode === "team" && t === 0 && !$("play").classList.contains("hide")); $("scoreG").classList.toggle("team-on", S.mode === "team" && t === 1 && !$("play").classList.contains("hide")); }
+function trail() { $("trail").innerHTML = S.qs.map((q, i) => `<span class="coin ${q.res === true ? "ok" : q.res === false ? "no" : i === S.qi ? "now" : ""}">${q.res === true ? "★" : i + 1}</span>`).join(""); }
+function renderQ() {
+  const q = S.qs[S.qi]; S.answered = q.res !== undefined;
+  const team = S.mode === "team" ? `<span class="turn" style="background:${S.qi % 2 ? "var(--goldd)" : "var(--royal)"}">${S.qi % 2 ? "金隊作答" : "藍隊作答"}</span>` : "";
+  $("card").innerHTML = `<span class="tag">${q.tag}・第 ${S.qi + 1} 題</span>${team}<div class="ask">${esc(q.ask)}</div>${q.show}`;
+  $("answers").innerHTML = q.opts.map((o, i) => `<button class="ans" type="button" data-v="${esc(o.v)}"><span class="k">${i + 1}</span>${o.h}</button>`).join("");
+  $("msg").innerHTML = "選出你的答案吧！"; $("sub").textContent = q.sayNow ? "按 🔊 可以再聽一次" : "看清楚再作答喔";
+  $("next").classList.add("hide");
+  trail(); scores();
+  if (q.res !== undefined) mark(q.pick, true); else if (q.sayNow) setTimeout(() => say(q.sayNow), 250);
+}
+function mark(v, silent) {
+  const q = S.qs[S.qi];
+  document.querySelectorAll(".ans").forEach((b) => { b.disabled = true; if (b.dataset.v === q.ans) b.classList.add("right"); else if (b.dataset.v === v) b.classList.add("wrong"); });
+  const ok = v === q.ans, r = q.rev;
+  $("msg").innerHTML = ok ? `${["太棒了！", "答對了！", "好厲害！"][S.qi % 3]} <span class="en">${["Great job!", "Excellent!", "Super!"][S.qi % 3]}</span>` : `差一點點！答案是 <span class="en">${esc(q.ans)}</span>`;
+  $("sub").innerHTML = r && r.s ? `<span class="en">${esc(r.s)}</span>　${esc(r.szh || "")}` : "";
+  $("next").classList.remove("hide"); $("next").textContent = S.qi + 1 >= S.qs.length ? "看結果 🏆" : "下一題 →";
+  if (!silent) { setTimeout(() => $("next").focus(), 50); say(q.full || q.ans); }
+}
+function answer(v) {
+  const q = S.qs[S.qi]; if (S.answered) return; S.answered = true;
+  q.res = v === q.ans; q.pick = v;
+  if (q.res) { tone([660, 880, 1320]); burst(); if (S.mode === "team") S.team[S.qi % 2]++; else S.score++; }
+  else { tone([300, 220], 0.16); if (q.rev && !S.wrong.some((w) => w.s === q.rev.s)) S.wrong.push(q.rev); }
+  mark(v); trail(); scores();
+}
+function next() { if (S.qi + 1 >= S.qs.length) return finish(); S.qi++; renderQ(); }
+function finish() {
+  show("end"); scores();
+  const n = S.qs.length;
+  if (S.mode === "team") {
+    const [b, g] = S.team;
+    $("tIcon").textContent = b === g ? "🤝" : "🏆";
+    $("tTitle").textContent = b === g ? "平手！都很棒" : b > g ? "藍隊獲勝！" : "金隊獲勝！";
+    $("stars").innerHTML = ""; $("tScore").textContent = `藍隊 ${b} 分　金隊 ${g} 分`;
+  } else {
+    const st = S.score >= n * 0.9 ? 3 : S.score >= n * 0.6 ? 2 : S.score >= n * 0.3 ? 1 : 0;
+    $("tIcon").textContent = ["💪", "🥉", "🥈", "🏆"][st];
+    $("tTitle").textContent = ["再挑戰一次！", "拿到寶藏了！", "好棒的尋寶家！", "寶藏大師！"][st];
+    $("stars").innerHTML = [0, 1, 2].map((i) => `<span class="${i < st ? "" : "off"}">★</span>`).join("");
+    $("tScore").textContent = `答對 ${S.score} / ${n} 題`;
+    if (st === 3) { burst(); setTimeout(burst, 300); tone([523, 659, 784, 1046], 0.14); }
+  }
+  $("revNote").textContent = S.wrong.length ? "按 🔊 聽單字和影片裡的例句。" : "全部答對，沒有要複習的字！";
+  $("review").innerHTML = S.wrong.map((r) => `<li><span class="e">${r.e || "⭐"}</span><div style="flex:1"><div class="w">${esc(r.w)} <span class="s">${esc(r.zh || "")}</span></div><div class="s">${esc(r.s || "")}　${esc(r.szh || "")}</div></div><button class="speak sm" type="button" data-say="${esc((r.w || "") + ". " + (r.s || ""))}" aria-label="播放">🔊</button></li>`).join("");
+}
+function start() { S.qs = build(S.unit, S.total); S.qi = 0; S.score = 0; S.team = [0, 0]; S.wrong = []; show("play"); renderQ(); }
+
+// ---------- confetti ----------
+const cv = $("fx"), cx = cv.getContext("2d"); let parts = [], anim = null;
+function burst() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  cv.width = innerWidth; cv.height = innerHeight;
+  const c = $("card").getBoundingClientRect(), ox = c.left + c.width / 2, oy = c.top + c.height / 2;
+  for (let i = 0; i < 70; i++) parts.push({ x: ox, y: oy, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 12 - 3, r: 4 + Math.random() * 6, c: ["#C9A227", "#E6CB80", "#F6E3A6", "#3C78C3", "#FFFFFF"][rnd(5)], a: 1 });
+  if (!anim) anim = requestAnimationFrame(step);
+}
+function step() {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  parts.forEach((p) => { p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.a -= 0.012; cx.globalAlpha = Math.max(p.a, 0); cx.fillStyle = p.c; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); });
+  parts = parts.filter((p) => p.a > 0 && p.y < cv.height + 20);
+  anim = parts.length ? requestAnimationFrame(step) : (cx.clearRect(0, 0, cv.width, cv.height), null);
+}
+
+// ---------- events ----------
+$("islands").addEventListener("click", (e) => { const b = e.target.closest(".isl"); if (!b) return; S.unit = b.dataset.u; renderIslands(); });
+$("islands").addEventListener("dblclick", (e) => { if (e.target.closest(".isl")) start(); });
+const seg = (a, b, key, va, vb) => { $(a).onclick = () => { S[key] = va; $(a).setAttribute("aria-pressed", "true"); $(b).setAttribute("aria-pressed", "false"); }; $(b).onclick = () => { S[key] = vb; $(b).setAttribute("aria-pressed", "true"); $(a).setAttribute("aria-pressed", "false"); }; };
+seg("mSolo", "mTeam", "mode", "solo", "team");
+seg("n10", "n20", "total", 10, 20);
+$("voice").onchange = (e) => { S.voice = e.target.checked; };
+$("go").onclick = () => { tone([523, 784], 0.1); start(); };
+$("again").onclick = start;
+$("home").onclick = () => { show("start"); renderIslands(); };
+$("quit").onclick = () => { try { speechSynthesis.cancel(); } catch (e) {} show("start"); renderIslands(); };
+$("next").onclick = next;
+$("answers").addEventListener("click", (e) => { const b = e.target.closest(".ans"); if (b && !b.disabled) answer(b.dataset.v); });
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-say]"); if (b) say(b.dataset.say); });
+document.addEventListener("keydown", (e) => {
+  if ($("play").classList.contains("hide")) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 4 && !S.answered) { const b = document.querySelectorAll(".ans")[n - 1]; if (b) answer(b.dataset.v); }
+  else if ((e.key === "Enter" || e.key === " ") && S.answered && document.activeElement?.id !== "next") { e.preventDefault(); next(); }
+});
+
+// ---------- state keep ----------
+window.claude?.hot?.snapshot?.(() => ({ unit: S.unit, mode: S.mode, total: S.total, voice: S.voice, qs: S.qs, qi: S.qi, score: S.score, team: S.team, wrong: S.wrong, screen: ["start", "play", "end"].find((s) => !$(s).classList.contains("hide")) }));
+function boot(d) {
+  d = d || {};
+  ["unit", "mode", "total", "voice"].forEach((k) => { if (d[k] !== undefined) S[k] = d[k]; });
+  $("mSolo").setAttribute("aria-pressed", S.mode === "solo"); $("mTeam").setAttribute("aria-pressed", S.mode === "team");
+  $("n10").setAttribute("aria-pressed", S.total === 10); $("n20").setAttribute("aria-pressed", S.total === 20); $("voice").checked = S.voice;
+  renderIslands();
+  if (d.screen === "play" && d.qs && d.qs.length) { Object.assign(S, { qs: d.qs, qi: d.qi, score: d.score, team: d.team, wrong: d.wrong }); show("play"); renderQ(); }
+  else if (d.screen === "end" && d.qs) { Object.assign(S, { qs: d.qs, qi: d.qi, score: d.score, team: d.team, wrong: d.wrong }); finish(); }
+  else show("start");
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+}
+</script>
+</body>
+</html>
